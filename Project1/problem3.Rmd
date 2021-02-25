@@ -1,0 +1,159 @@
+---
+title: "Problem 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+#Import all used libraries
+library(MASS)
+library(caret)
+library(class)
+library(pROC)
+```
+**a.i\)**  Using the expression for $p_i$ one obtains the following expression using the log-odds function
+
+$$
+\text{logit}(p_i)=\log(\frac{p_i}{1-p_i}) = \log(p_i)-\log(1-p_i) = \log(\frac{e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}}{1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}}) - \log(1-\frac{e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}}{1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}})
+$$
+This expression can be further simplified as
+$$
+\text{logit}(p_i)=\log(e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}})-\log(1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}) - \log(\frac{1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}-e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}}{1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}})= \beta_0+\mathbf{x}^T\boldsymbol{\beta} - \log(1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}) - \log(\frac{1}{1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}}}).
+$$
+And so, the expression becomes
+$$
+\text{logit}(p_i)=\beta_0+\mathbf{x}^T\boldsymbol{\beta}-\log(1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}})-\log(1)+\log(1+e^{\beta_0+\mathbf{x}^T\boldsymbol{\beta}})=\beta_0+\mathbf{x}^T\boldsymbol{\beta}.
+$$
+Which indeed shows that the log-odds function is a linear function of the covariates.
+\
+
+**ii)** To find the parameters for the logistic regression method, the following code was used 
+```{r echo=FALSE, eval=TRUE}
+#Not showing this in the document as it is not that important
+#Get data
+id <- "1i1cQPeoLLC_FyAH0nnqCnnrSBpn05_hO" # google file ID
+diabetes <- dget(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
+t = MASS::Pima.tr2
+
+#Extract
+train = diabetes$ctrain
+test  = diabetes$ctest
+```
+```{r echo=TRUE}
+#Estimate parameters
+diabetes.glm = glm(diabetes ~., data = train, family="binomial")
+summary(diabetes.glm)
+```
+Here, one can see the parameter values for the corresponding predictors. Now that the model has been trained, it can be used to predict the response from the testing set of predictors, and compare it to the actual response in a confusion matrix. To do this, the following code was used
+```{r echo=TRUE, eval=TRUE}
+#Logisitc regression, predict response using the model.
+glm.results = predict(diabetes.glm,newdata= test,type="response") #Returns probability of having diabetes
+#Make a table with predictions and true values. Make confusion matrix
+response = ifelse(test$diabetes==1,"Diabetic", "Non-diabetic") #Changes from 1/0 to diabetes/not-biabetes
+glm.pred = ifelse(round(glm.results,0)==1,"Diabetic", "Non-diabetic") #save the results with new labels. Cuts off at 0.5 with round()
+
+#Make confusion table
+tab = table("Predicted" = glm.pred, "Response" = response) #Using round to simulate 0.5 cutoff
+confmat = confusionMatrix(tab,positive="Diabetic") #For calculating specificity and sensitivity
+confmat #Show the results
+```
+Thus, one sees that the sensitivity of the model is `r confmat$byClass[1]`, and the specificity is `r confmat$byClass[2]`. 
+
+**b.i)** 
+$\pi_k$ is the fraction of a population that belong to class $k$. It can be interpreted as the probability of being in class $k$ with no knowledge of the predictors. Thus $\pi_0$ will be the fraction of people whom does not have diabetes, and $\pi_1$ is the fraction of people whom have diabetes. In the model, $\pi_k$ is estimated by taking the fraction of observations classified to class $k$ divided by the number of observations. \
+\
+
+$\boldsymbol{\mu}_k$ is the vector of expected values of the predictors for observations that belong to class $k$. Thus, $\boldsymbol{\mu}_0$ is the vector containing the expected values for bmi, age, glu etc among the non-diabetic participants. Then, $\boldsymbol{\mu}_1$ is the vector containing the excpected values for diabetic participants.  In the model $\boldsymbol{\mu}_k$ is estimated by taking the mean over each value for each class.\
+\
+
+$\boldsymbol{\Sigma}$ is the covariance matrix of the predictors. It is assumed, through lda, that $\boldsymbol{\Sigma}_k$ will be the same regardless of the class. The matrix stores the variance for the different predictors and the covariances between them. In this case these will be the variances in bmi, age, glu etc and the covariances between these.\
+\
+$f_k(x)$ is the probability density function for class $k$. Since the different classes usually have different expected-values, the response for each class will be distributed differently. This is a key point as it is used in posterior analysis to determine which class the observed set of predictors most likely belong to. \
+\
+**ii)** Here the models are fitted and the confusion tables created. The standard cut-off for these functions are at 0.5, so it does not have to be done manually.
+```{r echo=TRUE, eval=TRUE}
+#LDA, estimate parameters
+diabetes.lda = lda(diabetes ~., data = train, type = "response") #train model
+lda.results= predict(diabetes.lda, test) #Predict with 0.5 cutoff
+lda.pred = ifelse(lda.results$class==1,"Diabetic", "Non-diabetic")
+
+#Make confusion matrix for LDA
+confmatlin = confusionMatrix(table("Predicted"=lda.pred, "Response"=response), positive="Diabetic")
+confmatlin #Display
+
+#QDA, estimate parameters
+diabetes.qda = qda(diabetes~., data = train, type = "response") #Train model
+qda.results = predict(diabetes.qda, test) #Predict results
+qda.pred = ifelse(qda.results$class==1,"Diabetic", "Non-diabetic")
+
+#Make confusion matrix for QDA
+confmatquad = confusionMatrix(table("Predicted"=qda.pred, "Response"=response), positive="Diabetic")
+confmatquad #Show result
+```
+The difference between QDA and LDA is that in QDA, the variance-covariance matrix depends on the class, whereas in LDA it does not. This results in different shapes in the decision boundaries. LDA will produce linear decision boundaries and QDA will produce curved boundaries. Since QDA is more flexible it is expected to have higher variance and less bias than LDA.\
+\
+
+**c.i)** The KNN method will classify a new observation by finding the $k$ nearest observations, and classify the new observation as the class that appeared most frequent in those $k$ neighbors.\
+\
+
+**ii)** For choosing the optimal $k$, one could use cross validation for different values of $k$, and choose the $k$ that yields the lowest error. \
+\
+
+**iii)** The confusion matrix from the KNN-method is shown below.
+``` {r echo=TRUE, eval=TRUE}
+#K-nearest-neighbors, make model and confusion matrix
+diabetes.knn = knn(train, test, train$diabetes, k = 25) #Train model and predict with 0.5 cutoff
+#Label the results
+knn.pred = ifelse(diabetes.knn == 1, "Diabetic", "Non-diabetic")
+
+#Create confusion matrix for KNN
+confmatknear = confusionMatrix(table("Predicted" = knn.pred, "Response"=response), positive="Diabetic")
+confmatknear #Show the matrix
+```
+
+The function also calculates the specificity to be `r confmatknear$byClass[1]` and the sensitivity to be `r confmatknear$byClass[2]`, but these results will also be derived. From the confusion table one can read that the model correctly identifies 144 true negatives and 41 true positives. However it also yields 36 false negatives and 11 false positives. Thus there is some error, but this is to be expected of any method. The sensitivity of the model is the fraction of true positives to the sum of true positives and false negatives. Mathematically this means 
+$$
+\text{Sensitivity}=\frac{TP}{TP+FN}=\frac{41}{41+36}\approx 0.5325
+$$ 
+The specificity of the model is the fraction of true negatives to the sum of true negatives and false positives. Mathematically this is
+$$
+\text{Specificity} = \frac{TN}{TN+FP} = \frac{144}{144+11}=0.9290
+$$
+\
+**d)** 
+Below, there are plots of the ROC-curves for the different methods. This was done using the pROC and ggROC libraries. The code is as follows.
+```{r eval=TRUE,echo=TRUE,message=FALSE}
+#KNN that returns probabilities instead of classifications
+knnMod = knn(train, test , train$diabetes, k = 25, prob = T)
+probKNN = ifelse(knnMod == 0, 1 - attributes(knnMod)$prob, attributes(knnMod)$prob)
+
+#Transform the response into a factor with levels 1 and 0
+response = factor(test$diabetes)
+
+#Create roc-objects for each method
+rocknn = roc(response, probKNN)
+rocquad = roc(response, qda.results$posterior[,2])
+roclin = roc(response,lda.results$posterior[,2])
+roclog = roc(response, glm.results)
+
+#Storing the area under the curve for the different methods
+list = list(auc(rocknn), auc(rocquad), auc(roclin), auc(roclog))
+
+#Plotting the actual curve
+ggroc(data = list("KNN" = rocknn,"QDA" = rocquad, "LDA" = roclin, "LOGREG" = roclog),legacy.axes = TRUE) + ggtitle("ROC-curve for the different methods") + labs(color="Method")
+```
+```{r echo=FALSE}
+#For printing the area under curve later
+methodsList = list("KNN", "QDA", "LDA", "LOGREG")
+
+#Print it out
+for (i in 1:4) {
+  streng = paste("Area under curve for method", methodsList[i], "is", toString(list[i]), "\n", sep=" ")
+  cat(streng)
+}
+```
+From the plot one can see that the methods performs very similar, with some fluctuation among them. By looking at the area under the curve, one can see that KNN performs the worst while LDA and logistic regression performs the best. If the goal is to have an interpretable model, then the logistic regression model should be used as it performs well and allows for inference.
+
+
+
+

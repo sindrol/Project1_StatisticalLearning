@@ -1,0 +1,79 @@
+---
+title: "Problem 5"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+library(GGally)
+library(ISLR)
+library(ggplot2)
+library(ggfortify)
+library(MASS)
+library(class)
+library(pROC)
+library(plotROC)
+library(caret)
+library(boot)
+```
+
+
+```{r importing_data, echo=FALSE}
+id <- "19auu8YlUJJJUsZY8JZfsCTWzDm6doE7C" # google file ID
+d.bodyfat <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download",
+id), header = T)
+```
+
+
+### Problem 5a)
+```{r 5a}
+#Fit the regression model with bodyfat as response, and age, weight and bmi as predictors
+bodyfat.lm <- lm(bodyfat ~ age+weight+bmi, data=d.bodyfat)
+
+#Display the parameters of the model
+summary(bodyfat.lm)
+```
+In the code cell above, a linear regression model has been used to model bodyfat as the response with age, weight and bmi as predictor variables. R-squared can be read from the table above, and one gets $R^2=$ `r signif(summary(bodyfat.lm)$r.squared,3)`.
+
+
+### Problem 5b)
+
+```{r 5b}
+set.seed(4268)#For consistent results
+
+#Function fits a linear regression model and returns R^2
+boot.fnc <- function(formula ,data , indices){
+  d <- data[indices, ]
+  fitBoot <- lm(formula, data=d)
+  return(summary(fitBoot)$r.square)
+}
+
+#Generating 1000 bootstrap samples
+rsquared.boot <- boot(data=d.bodyfat, statistic=boot.fnc,R=1000,
+              formula=bodyfat~age+weight+bmi)
+
+#Display the result of the bootstraping
+rsquared.boot
+
+#Plotting the distribution of R^2
+plot(rsquared.boot)
+
+#Calculates confidence interval for the R^2 estimate
+boot.ci(rsquared.boot, type='bca')
+```
+```{r echo=FALSE}
+#Used for extracing the confidence interval
+el = boot.ci(rsquared.boot, type='bca')
+```
+
+
+**iii)** As one can see in from the "Bootstrap Statistics" above, the standard error for $R^2$ is `r signif(sqrt(var(rsquared.boot$t)),3)`. A $95\%$ confidence interval for $R^2$ is \
+`r signif(el$bca[4],3)` $<R^2<$ `r signif(el$bca[5],3)`.
+
+
+**iv)** This indicates that what seems like a certain value, actually is a point-estimate and is surprisingly uncertain. One must therefore have this uncertainty in mind  when working with the $R^2$-value.
+
+
+
+

@@ -1,0 +1,109 @@
+---
+title: "problem 4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+**a)**\
+**Hint 1:** predicted value of $y$ with the i-th observation left out
+ $$\hat{y}_{(-i)}=\mathbf{x}_i^T\hat{\boldsymbol{\beta}}_{(-i)}$$
+
+**Hint 2:** 
+$$X_{(-i)}^TX_{(-i)}=[\mathbf{x}_1,\mathbf{x}_2,...,\mathbf{x}_{i-1},\mathbf{x}_{i+1},...,\mathbf{x}_N]\cdot[x_1^T,x_2^T,...,\mathbf{x}_{i-1}^T,\mathbf{x}_{i+1}^T,...,\mathbf{x}_N^T]^T$$
+$$=\sum_{j=1, j\neq i}^N \mathbf{x}_j\mathbf{x}_j^T=\sum_{j=1}^N\mathbf{x}_j\mathbf{x}_j^T-\mathbf{x}_i\mathbf{x}_i^T$$
+$$=X^TX-\mathbf{x}_i\mathbf{x}_i^T$$
+
+**Hint 2.1:**\
+
+$$X_{(-i)}^T\mathbf{y}_{(-i)}=[\mathbf{x}_1,\mathbf{x}_2,...,\mathbf{x}_{i-1},\mathbf{x}_{i+1},...,\mathbf{x}_N]\cdot[y_1,...,y_{i-1},y_{i+1},...,y_N]^T$$
+$$=\sum_{j=1, j\neq i}^N\mathbf{x}_jy_j=\sum_{j=1}^N\mathbf{x}_jy_j-\mathbf{x}_iy_i$$
+$$=X^T\mathbf{y}-\mathbf{x}_iy_i$$
+
+
+**Hint 3:**\
+It is plausible to assume that all the $P$ columns in $X$ are linearly independent.
+
+Thus, $X^TX$ is a positive definite square matrix, I.e. $(X^TX)$ is invertible and $v^T(X^TX)u>0, \forall v,u\in\mathbb{R}^p$.
+
+Hence, one may use the Sherman-Morrison formula.
+
+$$\hat{\boldsymbol{\beta}}_{(-i)}=(X^TX-\mathbf{x}_i\mathbf{x}_i^T)^{-1}(X^T\mathbf{y}-\mathbf{x}_iy_i)$$
+
+Where $(X^TX-\mathbf{x}_i\mathbf{x}_i^T)^{-1}=(X^TX)^{-1}-\frac{(X^TX)^{-1}(-\mathbf{x}_i)\mathbf{x}_i^T(X^TX)^{-1}}{1+\mathbf{x}_i^T(X^TX)^{-1}(-\mathbf{x}_i)}$
+according to the Sherman-Morrison formula. Define $-h_i=\mathbf{x}_i^T(X^TX)^{-1}(-\mathbf{x}_i)$.
+
+As a result, one gets the following expression $(X^TX-\mathbf{x}_i\mathbf{x}_i^T)^{-1}=(X^TX)^{-1}(I+\frac{\mathbf{x}_i\mathbf{x}_i^T(X^TX)^{-1}}{1-h_i})$.
+
+Therefore:
+
+$$\hat{\boldsymbol{\beta}}_{(-i)}=(X^TX)^{-1}(I+\frac{\mathbf{x}_i\mathbf{x}_i^T(X^TX)^{-1}}{1-h_i})(X^T\mathbf{y}-\mathbf{x}_iy_i)$$.
+
+From hint 1 it is known that $\hat{y}_{(-i)}=\mathbf{x}_i^T\hat{\boldsymbol{\beta}}_{(-i)}$.
+
+$$\hat{y}_{(-i)}=\mathbf{x}_i^T((X^TX)^{-1}+\frac{(X^TX)^{-1}\mathbf{x}_i\mathbf{x}_i^T(X^TX)^{-1}}{1-h_i})(X^T\mathbf{y}-\mathbf{x}_iy_i)$$
+
+$$=\mathbf{x}_i^T(X^TX)^{-1}X^T\mathbf{y}-\mathbf{x}_i^T(X^TX)^{-1}\mathbf{x}_iy_i+\frac{\mathbf{x}_i^T(X^TX)^{-1}\mathbf{x}_i\mathbf{x}_i^T(X^TX)^{-1}X^T\mathbf{y}}{1-h_i}-\frac{\mathbf{x}_i^T(X^TX)^{-1}\mathbf{x}_i\mathbf{x}_i^T(X^TX)^{-1}\mathbf{x}_iy_i}{1-h_i}.$$ \
+Remember that $h_i=\mathbf{x}_i^T(X^TX)^{-1}\mathbf{x}_i$. Thus the expression becomes
+
+$$\hat{y}_{(-i)}=\mathbf{x}_i^T(X^TX)^{-1}X^T\mathbf{y}-h_iy_i+\frac{h_i\mathbf{x}_i^T(X^TX)^{-1}X^T\mathbf{y}}{1-h_i}-\frac{h_i^2y_i}{1-h_i}$, where $\hat{y}_i=x_i^T(X^TX)^{-1}X^T\mathbf{y}.$$
+
+This yields
+
+$$\hat{y}_{(-i)}=\hat{y}_i-h_iy_i+\frac{h_i\hat{y}_i}{1-h_i}-\frac{h_i^2y_i}{1-h_i}$$
+
+$$=\frac{\hat{y}_i-h_iy_i}{1-h_i}.$$
+
+
+
+Therefore, the expression for $CV$ becomes as follows
+$CV=\frac{1}{N}\sum_i MSE_i=\frac{1}{N}\sum(y_i-\hat{y}_{(-i)})^2$
+$y_i-\frac{\hat{y}_i-h_iy_i}{1-h_i}=\frac{y_i-h_iy_i+h_iy_i-\hat{y}_i}{1-h_i}=\frac{y_i-\hat{y}_i}{1-h_i}$.
+
+Thus: $CV=\frac{1}{N}\sum_{i=1}^N (\frac{y_i-\hat{y}_i}{1-h_i})$\
+\
+
+**4b)**
+
+**i)**
+False, LOOCV leads to low bias but high variance
+
+**ii)**
+
+True, polynomail regression is the same as linear regression, and thus it works
+
+**iii)**
+
+False, the formula is valid. When doing the log-transform of $Y$ we end up with a new response-variable. This new response variable we can do linear regression on as normal, and thus the formula holds up.
+Uncertain
+
+**iv)**
+False, in valid set approach and 2-fold CV the split is the same. However, in 2-fold CV we first train on the first half, then test on the other, and afterwards we train on the second half, and test on the first half. In valid set approach, we only train on the first half and test on the second half.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

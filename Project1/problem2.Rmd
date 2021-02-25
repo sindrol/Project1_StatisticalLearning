@@ -1,0 +1,119 @@
+---
+title: "Problem 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+library(GGally)
+library(ISLR)
+library(ggplot2)
+library(ggfortify)
+library(MASS)
+library(class)
+library(pROC)
+library(plotROC)
+library(caret)
+```
+
+
+
+```{r importing data, echo=FALSE}
+id <- "1yYlEl5gYY3BEtJ4d7KWaFGIOEweJIn__" # google file ID
+d.corona <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download",
+                             id), header = T)
+```
+
+## Problem 2a)
+
+
+Here one can see a table with the number of deceased (1) and non-deceased (0) in the whole dataset. 
+```{r 2a.i, echo=TRUE}
+table(d.corona[,1])
+```
+Here one can see a table with the number of males and females in each country.
+```{r 2a.ii, echo=TRUE}
+table(d.corona[,c(2,4)])
+
+```
+
+Here one can see a table with the number of deceased and non-deceased for each sex.
+```{r 2a.iii, echo=TRUE}
+table(d.corona[c(1,2)])
+```
+
+Here one can see a table with the number of deceased and non-deceased for each sex in France.
+```{r 2a.iv, echo=TRUE}
+table(subset(d.corona,country=="France")[,c(1,2)])
+```
+
+
+
+## Problem 2b)
+
+When choosing a model for this problem, several considerations were made. First, a linear model gave negative probabilities. Second, the questions in this problem would be hard to answer using LDA, QDA or KNN, due to inference being important. Therefore we chose a logistic regression model. The summary and an analysis of the variance with the chi-squared-test can be seen under.
+
+```{r 2b_building_model}
+deceased.logm  <- glm(deceased ~ . ,data=d.corona,family="binomial") #Training a log.regr. model on dataset.
+summary(deceased.logm)
+anova(deceased.logm, test="Chisq")
+
+```
+
+
+**i)**
+
+```{r 2b.i}
+koreanMan75 <- data.frame(sex="male", age=75, country="Korea") #Creating a 74 yrs old Korean man.
+koreanMan75.prediction <- predict.glm(deceased.logm, koreanMan75, type="response") #Predicting
+koreanMan75.prediction
+
+```
+The logistic regression model predicts a `r signif(koreanMan75.prediction,3)` chance of dying for a $75$ year old korean man.
+
+
+
+**ii)**
+The estimated predictor for the sexmale-variable is `r signif(summary(deceased.logm)$coefficients[2,1],3)` with p-value `r signif(summary(deceased.logm)$coefficients[2,4],3)`. Since the p-value is quite small, there is most likely a relation between dying and one's sex, and since the sexmale-predictor is positive, this indicates a higher probability to die for a male than a female.
+
+**iii)**
+The p-value of the Chi-squared test for the country-variable is `r signif(anova(deceased.logm, test="Chisq")$"Pr(>Chi)"[4],3)`. This is a pretty small p-value, which indicates a relation between dying and one's country of residence.
+
+
+**iv)**
+Let $A$ be a person and $A_{+10}$ be an identical person but whom is ten years older. Then for a logistic regression model, the following holds:
+$$
+\frac{Odds(A_{+10})}{Odds(A)} = e^{10\beta_{age}}.
+$$
+Hence, the odds to die increase by a factor of ${\left(e^{\beta_{age}}\right)}^{10} \approx 1.31$ for an identical person but whom is $10$ years older.
+
+
+
+## Problem 2c)
+
+To find out whether two covariates influence each other, one can create a logistic regression model with interaction terms between the two covariates of interest. In order not to waste information, all covariates are included in the models.
+
+**i)**
+```{r 2c.i}
+deceased_ageSex.logm <- lm(deceased ~ country+age*sex, data=d.corona)
+summary(deceased_ageSex.logm) #summary(deceased_ageSex.logm)$coefficients[7,4]
+```
+
+The p-value of the interaction term between age and sex is `r signif(summary(deceased_ageSex.logm)$coefficients[7,4],3)`, which gives a large probability for the interaction term to not have any effect on the probability to decease. It is not unlikely that age is a greater risk factor for men than for women, but the the p-value is too large to make a conclusion.
+
+
+
+**ii)**
+
+```{r 2c.ii}
+deceased_ageEthnic.logm <- lm(deceased ~ sex+age*country, data=d.corona)
+summary(deceased_ageEthnic.logm)
+
+```
+
+The p-value for the interaction term between age and countryindonesia is `r signif(summary(deceased_ageEthnic.logm)$coefficients[7,4],3)`, which is very low. Since countryFrance is the reference category and the estimate for $\beta_{age:countryindonesia}$ is negative, this p-value indicates that age is a greater risk for the French population than for the Indonesian population.
+
+
+## Problem 2d)
+**i) True, ii) True, iii) True, iv) False**
+

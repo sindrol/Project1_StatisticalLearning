@@ -1,0 +1,173 @@
+---
+title: "Problem 1"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+library(ggplot2)
+```
+In the task, it is given that $\tilde{\boldsymbol{\beta}}=(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T\mathbf{Y}$ where $\lambda\geq0$.
+
+### Problem 1a)
+First, the expected value of $\tilde{\boldsymbol{\beta}}$ is calculated
+$$
+E[\tilde{\boldsymbol{\beta}}]=E[(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T\mathbf{Y}].
+$$
+Using the fact that $\mathbf{Y}=f(\mathbf{X})+\boldsymbol{\varepsilon}$ and $f(\mathbf{X})=\mathbf{X}\beta$ the following is obtained
+$$
+E[\tilde{\boldsymbol{\beta}}]=E[(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T(\mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon})]=E[(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T\mathbf{X}\boldsymbol{\beta}]+E[(\mathbf{X}^T\mathbf{X}\lambda \mathbf{I})^{-1}\mathbf{X}^T\boldsymbol{\varepsilon}].
+$$
+It is assumed that $E[\boldsymbol{\varepsilon}]=0$ and since $\boldsymbol{\beta}$ is a constant vector, the expression simplifies to
+$$
+E[\tilde{\boldsymbol{\beta}}]=(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T\mathbf{X}\boldsymbol{\beta}.
+$$
+For the variance-covariance matrix one can use that $\text{Cov}[A\mathbf{X}]=A\text{Cov}[\mathbf{X}]A^T$
+$$
+\text{Cov}[\tilde{\boldsymbol{\beta}}]=\text{Cov}[(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T\mathbf{Y}]=\text{Cov}[W_\lambda \mathbf{Y}]=W_\lambda \text{Cov}[\mathbf{Y}] W_\lambda^T,
+$$
+where $W_{\lambda}=(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T$ and
+$$
+\text{Cov}[\mathbf{Y}]=\text{Cov}[f(\mathbf{X})+\boldsymbol{\varepsilon}]=\text{Cov}[f(\mathbf{X})]+\text{Cov}[\boldsymbol{\varepsilon}].
+$$
+Since $f(\mathbf{X})=\mathbf{X}\boldsymbol{\beta}$ and neither $\mathbf{X}$ nor $\boldsymbol{\beta}$ are stochastic, the term vanishes and all that is left is $Cov[\boldsymbol{\varepsilon}]=\sigma^2 \mathbf{I}$. Thus
+
+$$
+\text{Cov}[\tilde{\boldsymbol{\beta}}]=W_\lambda \text{Cov}[\mathbf{Y}] W_\lambda^T=W_\lambda \text{Cov}[\boldsymbol{\varepsilon}] W_\lambda^T=\sigma^2W_\lambda W_\lambda^T.
+$$
+
+### Problem 1b)
+
+$$
+E[\tilde{f}(\mathbf{x}_0)]=E[\mathbf{x}_0^T\tilde{\boldsymbol{\beta}}]=\mathbf{x}_0^TE[\tilde{\boldsymbol{\beta}}]=\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\mathbf{X}^T \mathbf{X}\boldsymbol{\beta}
+$$
+This can be simplified further by adding and subtracting $\lambda \mathbf{I}$, which is useful in **c)**, as such
+$$
+E[\tilde{f}(\mathbf{x}_0)]=\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}(\mathbf{X}^T \mathbf{X}+\lambda \mathbf{I} - \lambda \mathbf{I})\boldsymbol{\beta} = \mathbf{x}_0^T(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}((\mathbf{X}^T \mathbf{X}+\lambda \mathbf{I} )- \lambda \mathbf{I})\boldsymbol{\beta}.
+$$
+Thus the expected value is
+$$
+E[\tilde{f}(\mathbf{x}_0)]=\mathbf{x}_0^T(\boldsymbol{\beta} - \lambda(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\boldsymbol{\beta}).
+$$
+For calculating the variance one has
+$$
+\text{Var}[\tilde{f}(\mathbf{x}_0)]=\text{Var}[\mathbf{x}_0^T\tilde{\boldsymbol{\beta}}]=\mathbf{x}_0^T\text{Var}[\tilde{\boldsymbol{\beta}}]\mathbf{x}_0=\sigma^2\mathbf{x}_0^TW_\lambda W_\lambda^T\mathbf{x}_0
+$$
+
+### Problem 1c)
+For calculating the expected value of the mean-square error, it is given that
+$$
+E[\text{MSE}]= E[(y_0-\tilde{f}(\mathbf{x}_0))^2]=(E[ \tilde{f} (\mathbf{x}_0)-f(\mathbf{x}_0)])^2 + \text{Var}[\tilde{f}(\mathbf{x}_0)] + \text{Var}[\varepsilon ].
+$$
+The results obtained in **b)** yields
+$$
+(E[ \tilde{f} (\mathbf{x}_0)-f(\mathbf{x}_0)])^2 = (\mathbf{x}_0^T(\boldsymbol{\beta} - \lambda(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\boldsymbol{\beta})-\mathbf{x}_0^T\boldsymbol{\beta})^2= (\lambda \mathbf{x}_0^T(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\boldsymbol{\beta})^2.
+$$
+Thus, the final expression is
+$$
+E[\text{MSE}] = (\lambda \mathbf{x}_0^T(\mathbf{X}^T\mathbf{X}+\lambda \mathbf{I})^{-1}\boldsymbol{\beta})^2 + \sigma^2\mathbf{x}_0^TW_\lambda W_\lambda^T\mathbf{x}_0 + \sigma^2.
+$$
+In this expression, the first term is interpreted as the square bias, the second term is the variance, and the last term is the irreducible error.
+\
+\
+
+### Problem 1d)
+ To calculate and plot the squared bias at $\mathbf{x}_0$ for different values of $\lambda$ the following code was used
+```{r echo = FALSE, eval=TRUE}
+#Not shown as it is not that important
+#Get dataset
+id <- "1X_8OKcoYbng1XvYFDirxjEWr7LtpNr1m" #Google file ID
+values <- dget(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
+
+#Extract values
+X = values$X
+x0 = values$x0
+beta = values$beta
+sigma = values$sigma
+```
+
+```{r}
+#function for calculating the bias term
+bias = function(lambda, X, x0, beta) {
+  p = ncol(X)
+  value = (lambda*t(x0)%*%solve(t(X)%*%X+lambda*diag(p))%*%beta)^2
+  return(value)
+}
+
+#Create a linspace for lambda from 0 to 2
+lambdas = seq(0, 2, length.out = 500)
+BIAS = rep(NA, length(lambdas))
+
+#Calculate bias along the linspace of lambdas
+for (i in 1:length(lambdas)) BIAS[i] = bias(lambdas[i], X, x0, beta)
+
+#Make dataframe
+dfBias = data.frame(lambdas = lambdas, bias = BIAS)
+
+#Plotting
+ggplot(dfBias, aes(x = lambdas, y = bias)) + geom_line(color = "red") + xlab(expression(lambda)) +
+  ylab(expression(bias^2)) + ggtitle(expression(paste("Plot of squared bias as a function of ", lambda)))
+```
+\
+From the plot one can see that initially the bias is small and that it increases slightly, before decreasing until $\lambda=0.5$. The bias is strictly increasing with values of $\lambda$ greater than 0.5. The plot indicates that one can potentially obtain an overall smaller MSE with a $\lambda\neq0$.
+\
+\
+
+### Problem 1e)
+The following code was used to calculate the variance at $\mathbf{x}_0$ for different values of $\lambda$.
+```{r echo = TRUE}
+#Function for calculating the variance
+variance = function(lambda, X, x0, sigma) {
+  p = ncol(X)
+  W=solve(t(X)%*%X+lambda*diag(p))%*%t(X)
+  value = sigma^2*t(x0)%*%W%*%t(W)%*%x0
+  return(value)
+}
+
+#Linspace the lambdas once again
+lambdas = seq(0, 2, length.out = 500)
+VAR = rep(NA, length(lambdas))
+
+#Calculate the variance term along the lambda linspace
+for (i in 1:length(lambdas)) VAR[i] = variance(lambdas[i], X, x0, sigma)
+
+#Make dataframe
+dfVar = data.frame(lambdas = lambdas, var = VAR)
+
+#Plotting
+ggplot(dfVar, aes(x = lambdas, y = var)) + geom_line(color = "green4") + xlab(expression(lambda)) +
+  ylab("variance") + ggtitle(expression(paste("Plot of the variance as a function of ", lambda)))
+
+```
+\
+The plot shows that the variance is decreasing with greater values of $\lambda$. This, combined with the result from **d)**, further indicates that a $\lambda\neq0$ can yield a lower MSE than one would obtain using $\lambda=0$. 
+\
+\
+
+### Problem 1f)
+Using the expression derived in **c)**, one gets:
+```{r echo = TRUE}
+exp_mse = BIAS + VAR + sigma^2
+```
+This is now a vector containing the expected value of the mean square error at discrete values of $\lambda$ between 0 and 2. In order to find the value of lambda that minimizes the mean square error, the following function was used
+```{r} 
+lowest = lambdas[which.min(exp_mse)] #Finds the lambda which minimizes the function
+```
+The found value was that $\lambda =$ `r lowest` yields the lowest mean square error. For plotting the bias-variance trade-off the following code was used
+```{r}
+#Create dataframe
+dfAll = data.frame(lambda = lambdas, bias = BIAS, var = VAR, exp_mse = exp_mse)
+
+#Plotting
+plot = ggplot(dfAll) + geom_line(aes(x = lambda, y = exp_mse, color="Expected MSE"))# Add plot for expected MSE
+plot = plot + geom_line(aes(x = lambda, y = bias, color = "Bias squared")) #Add plot for bias
+plot = plot + geom_line(aes(x = lambda, y = var, color = "Variance")) #Add plot for variance
+plot = plot + geom_point(aes(y=exp_mse[which.min(exp_mse)], lowest, color = "Minimal MSE")) #Add point at lowest MSE
+plot = plot + geom_line(aes(x = lambda, y = sigma^2, color = "Irreducible error"))#Might be unecessary?
+plot = plot + labs(x = expression(lambda), y = expression(E(MSE)), color = "Title")  #Adjust labels
+plot = plot + ggtitle("Plot of the Bias-Variance trade-off") #Add title
+plot = plot + scale_color_manual(values = c("Bias squared" = 'red',"Variance" = 'green4', "Expected MSE" = 'blue', "Minimal MSE" = "orange", "Irreducible error" = "magenta"))
+plot #Show the plot
+
+```
+\
+From the graph for the MSE, one sees that it decreases until it reaches $\lambda=$ `r lowest`. This is expected, as one could see from **d)** that the bias was not strictly increasing with values of $\lambda>0$, and from **e)** that the variance is strictly decreasing for values of $\lambda>0$.  
